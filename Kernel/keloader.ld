@@ -23,11 +23,11 @@ SECTIONS
 	. = ALIGN(4096);
 
 	.bss . :
-    {
-        kbss = .; _kbss = .; __kbss = .;
+	{
+		kbss = .; _kbss = .; __kbss = .;
 			Kernel\keloader.o(.bss)
 		kbss_end = .; _kbss_end = .; __kbss_end = .;    
-    }
+	}
 
 	. = ALIGN(4096);
 
