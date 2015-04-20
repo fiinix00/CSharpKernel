@@ -2,41 +2,45 @@ ENTRY(_start)
 
 SECTIONS
 {
+	start = 0; _start = start; __start = start;
 	.text 0x10200: 
 	{ 
-		Kernel\keloader.o(.text*)
+		kcode = .; _kcode = .; __kcode = .;
+			Kernel\keloader.o(.text*)
+		kcode_end = .; _kcode_end = .; __kcode_end = .;	
 	}
 
-	.text 0x100000:
-	{ 
-		Kernel\cmain.o(.text*)
-		Kernel\Combined.opt.o(.text*)
+	. = ALIGN(4096);
+
+	.data . :
+	{
+		kdata = .; _kdata = .; __kdata = .;
+			Kernel\keloader.o(.data)
+			Kernel\keloader.o(.rodata)
+		kdata_end = .; _kdata_end = .; __kdata_end = .;
 	}
-	
-	.ctors : { *(.ctors*) }
 
-	.rel.text : { *(.rel.text*) }
-	.rela.text : { *(.rela.text*) }
-	.rel.data : { *(.rel.data*) }
-	.rela.data : { *(.rela.data*) }
-	.rel.rodata : { *(.rel.rodata*) }
-	.rela.rodata : { *(.rela.rodata*) }
-	.rel.eh_frame : { *(.rel.eh_frame*) }
-	.rela.eh_frame : { *(.rela.eh_frame*) }
+	. = ALIGN(4096);
 
-	.group : { *(.group*) }
+	.bss . :
+    {
+        kbss = .; _kbss = .; __kbss = .;
+			Kernel\keloader.o(.bss)
+		kbss_end = .; _kbss_end = .; __kbss_end = .;    
+    }
 
-	.gcc_exc : { *(.gcc_exc*) }
-	.rodata : { *(.rodata*) }
-	.data : { *(.data*) }
-	.bss : { *(.bss*) }
+	. = ALIGN(4096);
 
-	.note.GNU-stack : { *(.note.GNU-stack*) }
-	
-	.eh_frame : { *(.eh_frame) }
-	.shstrtab : { *(.shstrtab*) }
-	.symtab : { *(.strtab*) }
-	.strtab : { *(.strtab*) }
+	.text . :
+	{
+		code = .; _code = .; __code = .;
+			Kernel\cmain.o(.text*)	
+		code_end = .; _code_end = .; __code_end = .;
+	}
+
+	. = ALIGN(4096);
+
+	end = .; _end = .; __end = .;
 
 	/DISCARD/ : {
 		*(.note*);
@@ -46,5 +50,3 @@ SECTIONS
 		*(.comment);
 	}
 }
-
-/* *(.rel*); */

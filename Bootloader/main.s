@@ -13,10 +13,10 @@ boot_loader:
 	mov ss, bx
 	mov sp, 0x7C00
 
-	push ax
-		mov	ax, 0x0003 ; set video mode 3 (80x25 color)
-		int	0x10
-	pop ax
+	;push ax
+	;	mov	ax, 0x0003 ; set video mode 3 (80x25 color)
+	;	int	0x10
+	;pop ax
 
 	;Parameter from BIOS: dl = boot drive
 	mov [biosdrive], dl
@@ -38,11 +38,11 @@ boot_loader:
 	;dq 0x000000000000b00f = 00000000 00000000 00000000 00000000 00000000 00000000 10010000 00001111
 	;times 511 dq 0x0000000000000000
  
-	;PDP:
+	;PDP(E):
 	;dq 0x000000000000c00f = 00000000 00000000 00000000 00000000 00000000 00000000 10100000 00001111
 	;times 511 dq 0x0000000000000000
  
-	;PD:
+	;PD(E):
 	;dq 0x000000000000018f = 00000000 00000000 00000000 00000000 00000000 00000000 00000001 10001111
 	;times 511 dq 0x0000000000000000
  
@@ -84,11 +84,10 @@ boot_loader:
 	mov cr3, edx
  
 	mov ecx, 0xC0000080 ; Specify EFER MSR
- 
 	rdmsr ; Enable Long Mode
 	or eax, 0x00000100
 	wrmsr
- 
+
 	mov ebx, cr0 ; Activate long mode
 	or ebx, 0x80000001 ; by enabling paging and protection simultaneously
 	mov cr0, ebx ; skipping protected mode entirely
@@ -118,7 +117,7 @@ LoadExtendedBootloader:
 	ret 
 
 	dap db 16, 0            ; [2] sizeof(dap) 
-		dw 16               ; [2] transfer 16 sectors (before PVB)
+		dw 24               ; [2] transfer 16 sectors (before PVB)
 		dw 0x0, 0x1000      ; [4] to 0:10000
 		dd 0, 0             ; [8] from LBA 0 
 
