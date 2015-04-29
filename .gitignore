@@ -39,14 +39,26 @@ Kernel/Combined.opt.s
 Kernel/Combined.s
 
 CoreLib.ll
-kmain.ll
+CSKernel.ll
 
 Kernel/CoreLib.ll
 Kernel/cmain.o
 Kernel/keloader.o
-Kernel/kmain.ll
-Kernel/kmain.o
+Kernel/CSKernel.ll
+Kernel/CSKernel.o
 
-Kernel/kmain.vs/old.txt
+*.s.o
+*.c.o
+
+pcitables.o
+
+Kernel/CSKernel/old.txt
+
+*.exports.def
+*.exports.lib
+*.exports.map
+*.exports.c
+
+keloader.exports.s
 
 OSDev_CHS_50_16_63.img

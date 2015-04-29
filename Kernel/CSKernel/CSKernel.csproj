@@ -7,8 +7,8 @@
     <ProjectGuid>{B63930EE-A6EA-449C-813B-90761A2C9DAE}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>kmain.vs</RootNamespace>
-    <AssemblyName>kmain.vs</AssemblyName>
+    <RootNamespace>CSKernel</RootNamespace>
+    <AssemblyName>CSKernel</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -41,6 +41,7 @@
   <ItemGroup>
     <Reference Include="CoreLib">
       <HintPath>..\CoreLib.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="System" />
   </ItemGroup>
@@ -50,9 +51,6 @@
   <ItemGroup>
     <None Include="..\..\makefile">
       <Link>makefile</Link>
-    </None>
-    <None Include="..\kmain.cs">
-      <Link>kmain.cs</Link>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -67,9 +65,6 @@
     <None Include="..\keloader.ld">
       <Link>keloader.ld</Link>
     </None>
-    <None Include="..\llvm.ll">
-      <Link>llvm.ll</Link>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\..\Bootloader\main.s">
@@ -78,7 +73,18 @@
     <Content Include="old.txt" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Serial.cs" />
+    <Compile Include="Drivers\Drivers.cs" />
+    <Compile Include="Drivers\CMOS\CMOS.cs" />
+    <Compile Include="Drivers\HDD.cs" />
+    <Compile Include="Drivers\PCI\PCI.cs" />
+    <Compile Include="Drivers\PCI\PCIDB.cs" />
+    <Compile Include="Drivers\Serial.cs" />
+    <Compile Include="Drivers\Sound.cs" />
+    <Compile Include="Drivers\CMOS\CMOSClock.cs" />
+    <Compile Include="Drivers\Video\VGAVideo.cs" />
+    <Compile Include="Drivers\Video\Video.cs" />
+    <Compile Include="Extern.cs" />
+    <Compile Include="kmain.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

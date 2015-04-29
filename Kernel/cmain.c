@@ -1,3 +1,5 @@
+//#define asmlinkage __attribte__((regparm(3)))
+
 #define REGISTER_DATA           0x01F0          /* Data register */
 #define REGISTER_SECCNT         0x01F2          /* Sector counter register */
 #define REGISTER_SECNUM         0x01F3          /* Sector number register */
@@ -13,6 +15,11 @@
 #define COMMAND_READ    0x20
 
 volatile int ata_intrq;
+
+#define USING_CPU_REGISTER(_register, _size, _as) \
+	register ulong _register asm(#_register); \
+	_size _as = _register;
+
 
 #define k_asm_func(name) void k_##name() { asm(#name); } 
 #define k_asm_funcname(name) k_##name
@@ -46,46 +53,58 @@ typedef uint64_t uint64;
 typedef int64_t intptr_t;
 typedef uint64_t uintptr_t;
 
-static inline void udelay(unsigned long n)
+inline void udelay(uint n)
 {
 	if (n) asm("1: dec %%eax; jne 1b;" : : "a" (n * 1000));
 }
 
-static inline void mdelay(unsigned long n)
+inline void mdelay(uint n)
 {
 	while (--n) udelay(1000);
 }
 
-static inline uchar inb(ushort port)
+inline uchar inb(ushort port)
 {
 	uchar ret;
 	asm volatile ("inb %1, %0" : "=a"(ret) : "Nd"(port));
 	return ret;
 }
 
-static inline void outb(ushort port, uchar val)
+inline void outb(ushort port, uchar val)
 {
 	asm volatile ("outb %0, %1" : : "a"(val), "Nd"(port));
 }
 
-static inline ushort inw(ushort port)
+inline ushort inw(ushort port)
 {
 	ushort ret;
 	asm volatile("inw %1, %0" : "=a" (ret) : "Nd" (port));
 	return ret;
 }
 
-static inline void outw(ushort port, ushort val)
+inline uint inl(ushort port)
+{
+	uint data;
+	asm volatile ("inl %w1, %0" : "=a" (data) : "Nd" (port));
+	return data;
+}
+
+inline void outw(ushort port, ushort val)
 {
 	asm volatile("outw %0, %1" : : "a" (val), "Nd" (port));
 }
 
-static inline void cpuid(int code, uint32_t* a, uint32_t* d)
+inline void outl(ushort port, uint data)
+{
+	asm volatile ("outl %0, %w1" : : "a" (data), "Nd" (port));
+}
+
+inline void cpuid(int code, uint32_t* a, uint32_t* d)
 {
 	asm volatile ("cpuid" : "=a"(*a), "=d"(*d) : "0"(code) : "ebx", "ecx");
 }
 
-static inline void set_trap_flag(int enable)
+inline void set_trap_flag(int enable)
 {
 	asm("pushfq");
 	asm("pop %rax");
@@ -104,7 +123,7 @@ static inline void set_trap_flag(int enable)
 	asm("popfq");
 }
 
-static inline ulong rdtsc()
+inline ulong rdtsc()
 {
 	ulong ret;
 	asm volatile ("rdtsc" : "=A"(ret));
@@ -113,14 +132,14 @@ static inline ulong rdtsc()
 
 
 #define ReadControlRegister(reg) \
-	static inline ulong Read##reg() { \
+	inline ulong Read##reg() { \
 		uint64_t ret; \
 		asm volatile ("mov %%" #reg ", %0" : "=r" (ret)); \
 		return ret; \
 	}
 
 #define WriteControlRegister(reg) \
-	static inline void Write##reg(ulong value) { \
+	inline void Write##reg(ulong value) { \
 		asm volatile ("mov %0, %%" #reg "" :: "r" (value)); \
 	}
 
@@ -133,7 +152,7 @@ ReadWriteControlRegister(cr2);
 ReadWriteControlRegister(cr3);
 ReadWriteControlRegister(cr4);
 
-static inline void Bochs_debug_putc(char c)
+inline void Bochs_debug_putc(char c)
 {
 	outb(0xe9, c);
 }
@@ -142,19 +161,19 @@ void WriteCR4(uint64_t x) {
 	asm volatile ("mov %0, %%cr4" : : "r" (x));
 }
 
-static inline void wrmsr(uint msr_id, ulong msr_value)
+inline void wrmsr(uint msr_id, ulong msr_value)
 {
 	asm volatile ("wrmsr" : : "c" (msr_id), "A" (msr_value));
 }
 
-static inline ulong rdmsr(uint msr_id)
+inline ulong rdmsr(uint msr_id)
 {
 	ulong msr_value;
 	asm volatile ("rdmsr" : "=A" (msr_value) : "c" (msr_id));
 	return msr_value;
 }
 
-static inline void insl(int port, void *addr, int cnt)
+inline void insl(int port, void *addr, int cnt)
 {
 	asm volatile("cld; rep insl" :
 	"=D" (addr), "=c" (cnt) :
@@ -162,11 +181,11 @@ static inline void insl(int port, void *addr, int cnt)
 	"memory", "cc");
 }
 
-static inline void breakpoint(void) {
+inline void breakpoint(void) {
 	asm volatile ("int $3");
 }
 
-//static inline uint xchg(volatile uint *addr, uint newval)
+//inline uint xchg(volatile uint *addr, uint newval)
 //{
 //	uint result;
 //
@@ -632,7 +651,7 @@ void Reboot() {
 }
 
 
-static inline void invlpg(ulong rax)
+inline void invlpg(ulong rax)
 {
 	asm volatile("\n" "mov %0, %%rax;\n" "invlpg (%%rax);\n" :: "g"(rax) : "rax");
 }
@@ -741,24 +760,24 @@ int bl_read(int drive, int numblock, int count, char *buf)
 	return count;
 }
 
-//int bl_write(int drive, int numblock, int count, char *buf)
-//{
-//	u16 tmpword;
-//	int idx;
-//
-//	bl_common(drive, numblock, count);
-//	outb(0x1F7, 0x30);
-//
-//	/* Wait for the drive to signal that it's ready: */
-//	while (!(inb(0x1F7) & 0x08));
-//
-//	for (idx = 0; idx < 256 * count; idx++) {
-//		tmpword = (buf[idx * 2 + 1] << 8) | buf[idx * 2];
-//		outw(0x1F0, tmpword);
-//	}
-//
-//	return count;
-//}
+int bl_write(int drive, int numblock, int count, char *buf)
+{
+	uint16 tmpword;
+	int idx;
+
+	bl_common(drive, numblock, count);
+	outb(0x1F7, 0x30);
+
+	/* Wait for the drive to signal that it's ready: */
+	while (!(inb(0x1F7) & 0x08));
+
+	for (idx = 0; idx < 256 * count; idx++) {
+		tmpword = (buf[idx * 2 + 1] << 8) | buf[idx * 2];
+		outw(0x1F0, tmpword);
+	}
+
+	return count;
+}
 
 //http://a.michelizza.free.fr/Pepin/Disk/advmemory_to_disk.diff
 //http://www.news.cs.nyu.edu/~jinyang/sp09/notes/l3.html
@@ -768,9 +787,9 @@ int bl_read(int drive, int numblock, int count, char *buf)
 void loadIt()
 {
 	int i;
-	for (i = 0; i < 2048 * 2; i++)
+	for (i = 0; i < 2048 * 4; i++)
 	{
-		bl_read(0, i + (0x300000 / 512), 1, (char*)(0x300000 + (i * 512) - 8));
+		bl_read(0, i + (0x300000 / 512), 1, (char*)(0x300000 + (i * 512)));
 	}
 }
 
@@ -791,13 +810,17 @@ int cmain()
 
 	placement_address = 0x600000;
 	
-	ulong* startPtr = 0x300000 - 8;
-	ulong startPtrValue = *startPtr;
-	int(*functionPtr)() = startPtrValue;
-	functionPtr();
+	//for (void(**f)(void) = (void(**)(void))ctors_start; f != ctors_end; f++)
+	//	(**f)();
 
-	return 0;
+	//https://github.com/AdamRi/scummvm-pink/blob/master/backends/platform/dc/dcloader.cpp
+
+	//Call CSMain
+	return ((int(*)())0x300000)();
 }
+
+//void name1() __attribute__((alias("name2")));
+
 
 /*
 
