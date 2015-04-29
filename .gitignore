@@ -54,6 +54,8 @@ pcitables.o
 
 Kernel/CSKernel/old.txt
 
+Kernel\keloader.exports.ld
+
 *.exports.def
 *.exports.lib
 *.exports.map
